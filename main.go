@@ -27,7 +27,7 @@ func (v *VersionType) Set(s string) error {
 		*v = VersionType(s)
 		return nil
 	default:
-		return fmt.Errorf("invalid version type: %s. Available: main, major, or minor", s)
+		return fmt.Errorf("invalid version type: %s. Available: major, minor or patch", s)
 	}
 }
 
@@ -135,30 +135,30 @@ func getTags() []TagVersion {
 
 func getLatestTag(tags []TagVersion) TagVersion {
 	var latest TagVersion
-	highestMain := -1
-	for _, t := range tags {
-		if t.Major > highestMain {
-			highestMain = t.Major
-			latest = t
-		}
-	}
 	highestMajor := -1
 	for _, t := range tags {
-		if highestMain > t.Major {
-			continue
-		}
-		if t.Minor > highestMajor {
-			highestMajor = t.Minor
+		if t.Major > highestMajor {
+			highestMajor = t.Major
 			latest = t
 		}
 	}
 	highestMinor := -1
 	for _, t := range tags {
-		if highestMain > t.Major || highestMajor > t.Minor {
+		if highestMajor > t.Major {
 			continue
 		}
-		if t.Patch > highestMinor {
-			highestMinor = t.Patch
+		if t.Minor > highestMinor {
+			highestMinor = t.Minor
+			latest = t
+		}
+	}
+	highestPatch := -1
+	for _, t := range tags {
+		if highestMajor > t.Major || highestMinor > t.Minor {
+			continue
+		}
+		if t.Patch > highestPatch {
+			highestPatch = t.Patch
 			latest = t
 		}
 	}
@@ -167,7 +167,7 @@ func getLatestTag(tags []TagVersion) TagVersion {
 
 func main() {
 	var version VersionType = Patch
-	flag.Var(&version, "b", "What to bump: main, major, or minor (default: minor)")
+	flag.Var(&version, "b", "What to bump: major, minor or patch (default: patch)")
 	isDryRun := flag.Bool("dry", false, "If true, only logs will be shown, an actual git tag and push won't be executed")
 	flag.Parse()
 	if *isDryRun {
